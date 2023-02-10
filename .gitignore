@@ -1,0 +1,13 @@
+**
+!*/
+
+!/.gitignore
+!/README.md
+!/LICENSE
+!/Makefile
+
+!/plugins/**
+/plugins/**.sw[op]
+/plugins/debug
+
+!/data/img-cache/.keep
