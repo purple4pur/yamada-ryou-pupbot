@@ -55,11 +55,21 @@ plugin.onMounted(() => {
       segment.image(data.pic), '\n',
       '标题：' + data.title, '\n',
       'UP主：' + data.owner.name, '\n',
+      toReadable(data.stat.view) + '播放 / ' + toReadable(data.stat.like) + '点赞 / ' + toReadable(data.stat.reply) + '评论\n',
       VIDEO_URL_ROOT + data.bvid
     ]
     event.reply(msg)
   })
 })
+
+function toReadable(num) { // {{{
+  if (num >= 10000) {
+    num = Math.floor(num/1000) / 10
+    return num + '万'
+  } else {
+    return num
+  }
+} // }}}
 
 module.exports = { plugin }
 
