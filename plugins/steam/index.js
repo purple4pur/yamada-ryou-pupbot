@@ -88,9 +88,11 @@ function toMessage(content) { // {{{
     .replaceAll(/\[b\](.*?)\[\/b\]/g, '*$1*')
     .replaceAll(/\[i\](.*?)\[\/i\]/g, '*$1*')
     .replaceAll('[list]', '')
-    .replaceAll('[/list]', '\n')
+    .replaceAll('[olist]', '')
     .replaceAll('[*]', '\n   * ')
-    .replaceAll(/\[previewyoutube=(\w+).*?previewyoutube\]/g, 'youtu.be/$1')
+    .replaceAll('[/list]', '\n')
+    .replaceAll('[/olist]', '\n')
+    .replaceAll(/\[previewyoutube=(\w+).*?previewyoutube\]/g, 'youtu.be/$1\n')
     .replaceAll('’', '\'')
     .replaceAll(/\[url=(https?:\/\/\S+?)](.*?)\[\/url\]/g, '$2 ($1)')
 
