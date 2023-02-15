@@ -1,12 +1,12 @@
 const { PupPlugin, segment, http } = require('@pupbot/core')
 const { spawnSync } = require('child_process')
+const { BOT_ROOT, timestampToDate } = require('../common.js')
 
 const plugin = new PupPlugin('steam', '0.1.0')
 
 const QUERY_URL = 'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002'
 const IMG_URL_BASE = 'https://cdn.akamai.steamstatic.com/steamcommunity/public/images/clans'
 
-const BOT_ROOT = process.env.BOT_ROOT
 const APPID_DATA_FILE = BOT_ROOT + '/data/appid/appid_name.txt'
 
 plugin.onMounted(() => {
@@ -69,7 +69,7 @@ plugin.onMounted(() => {
     event.reply([
       '游戏名：' + await spawnSync('grep', [`^${appid}`, APPID_DATA_FILE]).output[1].toString('utf8').trim() + '\n',
       '标题：' + news.title + '\n',
-      '日期：' + toDate(news.date) + '\n',
+      '日期：' + timestampToDate(news.date) + '\n',
       '链接：' + news.url
     ])
     event.reply(toMessage(news.contents))
@@ -104,17 +104,6 @@ function toMessage(content) { // {{{
     }
   })
   return msg
-} // }}}
-
-function toDate(timestamp) { // {{{
-  let date = new Date(timestamp * 1000)
-  return date.getFullYear() + '年' + ( date.getMonth()+1 ) + '月' + date.getDate() + '日'
-} // }}}
-
-function randInt(min, max) { // {{{
-  if (min === max && max === 0)
-    max = 1
-  return Math.floor( Math.random() * (max - min) + min )
 } // }}}
 
 module.exports = { plugin }

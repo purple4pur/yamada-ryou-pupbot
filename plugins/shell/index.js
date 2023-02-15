@@ -1,9 +1,8 @@
 const { PupPlugin, segment, http } = require('@pupbot/core')
 const { exec } = require('child_process')
+const { BOT_ROOT } = require('../common.js')
 
 const plugin = new PupPlugin('shell', '0.1.0')
-
-const BOT_ROOT = process.env.BOT_ROOT
 
 plugin.onMounted(() => {
   const cmd = /^\/sh(.*)/

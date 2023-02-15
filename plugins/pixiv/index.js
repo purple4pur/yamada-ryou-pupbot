@@ -3,10 +3,10 @@ const fs = require('fs')
 const { PupPlugin, segment, http } = require('@pupbot/core')
 const { XMLParser } = require('fast-xml-parser')
 const { exec } = require('child_process')
+const { BOT_ROOT, choice } = require('../common.js')
 
 const plugin = new PupPlugin('pixiv', '0.1.0')
 
-const BOT_ROOT = process.env.BOT_ROOT
 const IMG_CACHE_DIR = BOT_ROOT + '/data/img-cache/'
 
 plugin.onMounted(() => {
@@ -87,7 +87,7 @@ plugin.onMounted(() => {
     } else if (isRandom) {
       const files = fs.readdirSync(IMG_CACHE_DIR)
       const localImgs = files.filter(file => /\.img$/.test(file))
-      const localImg = localImgs[randInt(0, localImgs.length-1)]
+      const localImg = choice(localImgs)
       const id = localImg.slice(0, -4)
       event.reply('随机发送已缓存图片：' + id)
 
@@ -153,7 +153,7 @@ async function parseRss(type) { // {{{
     if (items.length === 0) {
       return undefined
     }
-    const chosen = items[randInt(0, items.length-1)]
+    const chosen = choice(items)
     //--console.log(chosen)
 
     return {
@@ -179,7 +179,7 @@ async function parseLolicon(tag) { // {{{
     if (items.length === 0) {
       return undefined
     }
-    const chosen = items[randInt(0, items.length-1)]
+    const chosen = choice(items)
     //--console.log(chosen)
 
     return {
@@ -219,7 +219,7 @@ async function parseMoedogSearch(tag) { // {{{
     if (items.length === 0) {
       return undefined
     }
-    const chosen = items[randInt(0, items.length-1)]
+    const chosen = choice(items)
     //--console.log(chosen)
 
     return {
@@ -267,7 +267,7 @@ async function prepareImage(event, imgUrls, pid) { // {{{
   } else {
     const files = fs.readdirSync(IMG_CACHE_DIR)
     const localImgs = files.filter(file => /\.img$/.test(file))
-    const localImg = localImgs[randInt(0, localImgs.length-1)]
+    const localImg = choice(localImgs)
 
     event.reply('(>_<) 缓存失败，api受限/连接超时/r18，将随机发送已缓存图片：' + localImg.slice(0, -4))
     return [IMG_CACHE_DIR + localImg, localImg.slice(0, -4)]
@@ -279,12 +279,6 @@ async function downloadImage(url, filepath) { // {{{
     url: url,
     dest: filepath
   })
-} // }}}
-
-function randInt(min, max) { // {{{
-  if (min === max && max === 0)
-    max = 1
-  return Math.floor( Math.random() * (max - min) + min )
 } // }}}
 
 module.exports = { plugin }

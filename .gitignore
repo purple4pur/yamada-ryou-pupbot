@@ -6,8 +6,7 @@
 !/LICENSE
 !/Makefile
 
-!/plugins/**
-/plugins/**.sw[op]
+!/plugins/**.js
 /plugins/debug
 
 !/data/img-cache/.keep

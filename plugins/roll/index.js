@@ -1,4 +1,5 @@
 const { PupPlugin, segment, http } = require('@pupbot/core')
+const { randInt } = require('../common.js')
 
 const plugin = new PupPlugin('roll', '0.1.0')
 
@@ -14,7 +15,7 @@ plugin.onMounted(() => {
     else
       max = Number(max)
 
-    const num = randInt(0, max-1)
+    const num = randInt(0, max)
     let ret = num.toString()
     if (num < max/10) {
       ret = '才' + ret + '，杂鱼~ 杂鱼~'
@@ -22,12 +23,6 @@ plugin.onMounted(() => {
     event.reply(ret)
   })
 })
-
-function randInt(min, max) {
-  if (min === max && max === 0)
-    max = 1
-  return Math.floor( Math.random() * (max - min) + min )
-}
 
 module.exports = { plugin }
 
