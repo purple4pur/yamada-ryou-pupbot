@@ -12,6 +12,9 @@ const IMG_CACHE_DIR = BOT_ROOT + '/data/img-cache/'
 plugin.onMounted(() => {
   const cmd = /^\s*(精准|精确)?给点\s*(\S+)?/
 
+  //
+  // admin commands start with '/'
+  // reference : https://www.npmjs.com/package/pupbot-plugin-soutu
   plugin.onAdminCmd('/给点', (event, params) => { // {{{
     const [cmd, target] = params
 
@@ -74,16 +77,20 @@ plugin.onMounted(() => {
     const isRealSearch = !!match[1]
     const tag = match[2]
     const bareID = tag?.match(/p?id(\d+)/i)?.[1]
-    const isRandom = /^随机$/.test(tag)
+    const isRandom = (tag === '随机')
 
     let data
 
+    //
+    // match : 给点id123456
     if (bareID) {
       data = {
         pid: bareID,
         imgUrls: pid2urls(bareID)
       }
 
+    //
+    // match : 给点随机
     } else if (isRandom) {
       const files = fs.readdirSync(IMG_CACHE_DIR)
       const localImgs = files.filter(file => /\.img$/.test(file))
@@ -97,6 +104,8 @@ plugin.onMounted(() => {
       }
 
     } else {
+      //
+      // match : 精确给点
       if (isRealSearch) {
         return event.reply('【精确给点】已失效。')
         //--if (!tag) {
@@ -105,6 +114,8 @@ plugin.onMounted(() => {
         //--data = await parseMoedogSearch(tag)
       } else {
         switch (tag) {
+          //
+          // match : 给点月榜
           case '日榜':
             data = await parseRss('daily')
             break
@@ -114,6 +125,8 @@ plugin.onMounted(() => {
           case '月榜':
             data = await parseRss('monthly')
             break
+          //
+          // match : 给点 / 给点原神
           default:
             data = await parseLolicon(tag)
         }
@@ -127,6 +140,8 @@ plugin.onMounted(() => {
     }
     console.log(data)
 
+    //
+    // download image if needed, and get local image path
     const [localImg, localPid] = await prepareImage(event, data.imgUrls, data.pid)
     const img = segment.image('file://' + localImg)
     event.reply(img)
@@ -137,7 +152,11 @@ plugin.onMounted(() => {
   })
 })
 
-// type: one of 'daily'/'weekly'/'monthly'
+/**
+ * Parse pixiv ranking rss to data
+ *   type : 'daily' / 'weekly' / 'monthly'
+ * reference : https://rakuen.thec.me/PixivRss/
+ */
 async function parseRss(type) { // {{{
   const url = 'https://rakuen.thec.me/PixivRss/' + type + '-30'
 
@@ -164,6 +183,11 @@ async function parseRss(type) { // {{{
   }
 } // }}}
 
+/**
+ * Parse LoliconAPI response to data
+ *   tag : if not present, query a random image
+ * reference : https://api.lolicon.app/#/setu
+ */
 async function parseLolicon(tag) { // {{{
   const url = 'https://api.lolicon.app/setu/v2'
 
@@ -190,6 +214,11 @@ async function parseLolicon(tag) { // {{{
   }
 } // }}}
 
+/**
+ * Parse MoedogPixivAPI response to data
+ *   tag : keyword in search
+ * reference : https://api.moedog.org/pixiv/v2.html
+ */
 async function parseMoedogSearch(tag) { // {{{
   const url = 'https://api.moedog.org/pixiv/v2'
 
@@ -203,6 +232,8 @@ async function parseMoedogSearch(tag) { // {{{
     const preItems = json.illusts
     let items = []
     for (const i of preItems) {
+      //
+      // we only need safe-for-work illustrations
       if (i.type === 'illust') {
         let isR18 = false
         for (const tag of i.tags) {
@@ -230,6 +261,9 @@ async function parseMoedogSearch(tag) { // {{{
   }
 } // }}}
 
+/**
+ * Return pixiv image proxy urls by given pid
+ */
 function pid2urls(pid, ext) { // {{{
   if (!ext)
     ext = 'jpg'
@@ -240,13 +274,20 @@ function pid2urls(pid, ext) { // {{{
   ]
 } // }}}
 
+/**
+ * Return local image path (download first if needed)
+ */
 async function prepareImage(event, imgUrls, pid) { // {{{
   const filePath = IMG_CACHE_DIR + pid + '.img'
 
+  //
+  // queried image has not been cached locally
   if (!fs.existsSync(filePath)) {
     event.reply('尝试缓存图片中...')
     let success = false
 
+    //
+    // try urls one by one
     for (const imgUrl of imgUrls) {
       console.log('trying "' + imgUrl + '" ...')
       await downloadImage(imgUrl, filePath)
@@ -261,9 +302,13 @@ async function prepareImage(event, imgUrls, pid) { // {{{
     }
   }
 
+  //
+  // check again and the image has been cached successfully
   if (fs.existsSync(filePath)) {
     return [filePath, pid]
 
+  //
+  // failed to cache, return random cached image
   } else {
     const files = fs.readdirSync(IMG_CACHE_DIR)
     const localImgs = files.filter(file => /\.img$/.test(file))
@@ -274,6 +319,9 @@ async function prepareImage(event, imgUrls, pid) { // {{{
   }
 } // }}}
 
+/**
+ * warpper for image downloader
+ */
 async function downloadImage(url, filepath) { // {{{
   return await download.image({
     url: url,

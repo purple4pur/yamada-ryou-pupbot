@@ -7,9 +7,13 @@ const QUERY_URL = 'https://api.bilibili.com/x/web-interface/view'
 const VIDEO_URL_ROOT = 'https://www.bilibili.com/video/'
 
 plugin.onMounted(() => {
+  //
+  // match : av123456 / BV1A2b3C4d / b23.tv/1A2b3C4d
   const cmd = /[AaBb][Vv][0-9a-zA-Z]+|b23\.tv\\?\/[0-9a-zA-Z]+/
 
   plugin.onMatch(cmd, async (event) => {
+    //
+    // fix : forwarding QQ mini card will convert '/' ==> '\/'
     const raw = event.toString().replaceAll('\\/', '/')
     const match = raw.match(cmd)?.at(0)
     if (!match) {
@@ -17,9 +21,17 @@ plugin.onMounted(() => {
     }
 
     let vid = match
+    //
+    // match b23.tv/1A2b3C4d
     if (match.startsWith('b23')) {
+      //
+      // get 1A2b3C4d
       vid = vid.slice(7)
+      //
+      // match short url
       if (!vid.startsWith('BV') && !vid.startsWith('av')) {
+        //
+        // short url ==> real vid
         let res = await http.get('https://' + match)
         if (res?.status !== 200) {
           return
@@ -33,6 +45,9 @@ plugin.onMounted(() => {
 
     const isAvid = ( vid.startsWith('A') || vid.startsWith('a') ) ? true : false
 
+    //
+    // get bilibili video infomation
+    // reference : https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/video/info.md#获取视频详细信息web端
     let params = {}
     if (isAvid) {
       params = {aid: vid.slice(2)}

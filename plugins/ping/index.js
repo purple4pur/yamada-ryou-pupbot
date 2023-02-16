@@ -3,6 +3,8 @@ const { choice } = require('../common.js')
 
 const plugin = new PupPlugin('ping', '0.1.0')
 
+//
+// reference : https://animemanga33.com/archives/42968
 const SAYINGS = [
   'うれしくないし♡',
   'スタジオ代もノルマも４分割',

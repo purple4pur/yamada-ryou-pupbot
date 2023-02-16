@@ -21,13 +21,19 @@ plugin.onMounted(() => {
       return event.reply('游戏查询<全部或部分游戏名>，如【游戏查询muse dash】')
     }
 
+    //
+    // find game name in the data file, in a safe way
     const child = await spawnSync('grep', [name, APPID_DATA_FILE, '-i'])
     const result = child.output[1].toString('utf8')
 
+    //
+    // found nothing
     if (result === '') {
       return event.reply('(>_<) 找不到结果哦，试着用更准确的描述吧！')
     }
     const lines = result.split('\n').length - 1
+    //
+    // found too many results
     if (lines > 70) {
       return event.reply(`(>_<) 结果太多啦（共 ${lines} 行），试着用更准确的描述吧！`)
     }
@@ -46,12 +52,17 @@ plugin.onMounted(() => {
     }
 
     let num = match[3]
+    //
+    // validate [num] input, fix to 1 if invalid
     if (!num || num < 1) {
       num = 1
     } else {
       num = parseInt(num)
     }
 
+    //
+    // querying news by appid
+    // reference : https://developer.valvesoftware.com/wiki/Steam_Web_API#GetNewsForApp_.28v0002.29
     const response = await http.get(
       QUERY_URL,
       { params : {
