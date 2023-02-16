@@ -134,8 +134,10 @@ plugin.onMounted(() => {
           //
           // match : 给点原神
           default:
+            console.log('trying anosu api ...')
             data = await parseAnosuSearch(tag)
             if (!data) {
+              console.log('trying lolicon api ...')
               data = await parseLolicon(tag)
             }
         }
