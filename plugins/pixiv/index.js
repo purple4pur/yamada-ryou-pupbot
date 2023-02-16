@@ -285,7 +285,10 @@ async function parseAnosuSearch(tag) { // {{{
   return {
     title: item.title,
     pid: item.pid,
-    imgUrls: [item.url].concat( pid2urls(item.pid, item.ext) )
+    //
+    // fix : jitsu.top connection timeout
+    imgUrls: [item.url.replace(/\/\/.*?jitsu\.top/, '//i.pixiv.re')]
+      .concat( pid2urls(item.pid, item.ext) )
   }
 } // }}}
 
@@ -296,9 +299,9 @@ function pid2urls(pid, ext) { // {{{
   if (!ext)
     ext = 'jpg'
   return [
-    'https://pixiv.re/' + pid + '.' + ext,
-    'https://pixiv.nl/' + pid + '.' + ext,
     'https://i.pixiv.nl/' + pid + '.' + ext,
+    'https://i.pixiv.re/' + pid + '.' + ext,
+    'https://pixiv.nl/' + pid + '.' + ext,
     'https://pixiv.shojo.cn/' + pid
   ]
 } // }}}
