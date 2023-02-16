@@ -279,7 +279,7 @@ async function parseAnosuSearch(tag) { // {{{
     return undefined
   }
   const item = response.data?.at(0)
-  if (item.length === 0) {
+  if (!item) {
     return undefined
   }
   return {
