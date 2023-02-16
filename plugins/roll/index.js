@@ -10,17 +10,10 @@ plugin.onMounted(() => {
     const raw = event.raw_message
 
     let max = raw.match(cmd)[1]
-    if (!max)
-      max = 100
-    else
-      max = Number(max)
+    max = (max) ? parseInt(max) : 100
 
     const num = randInt(0, max)
-    let ret = num.toString()
-    if (num < max/10) {
-      ret = '才' + ret + '，杂鱼~ 杂鱼~'
-    }
-    event.reply(ret)
+    event.reply([num.toString()])
   })
 })
 
