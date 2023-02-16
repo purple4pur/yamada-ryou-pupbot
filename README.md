@@ -22,7 +22,9 @@ $BOT_ROOT
 ├── plugins/        <--- 由本项目提供
 └── README.md
 ```
-3. 通过 `make start` 启动 bot，因为 Makefile 内定义了插件所需的 `BOT_ROOT`
+3. 确保已安装下列应用：`curl`，`vim`，`jq`
+4. 确保 bot 目录内已安装下列 npm 包：`image-downloader`，`fast-xml-parser`
+5. 通过 `make start` 启动 bot，因为 Makefile 内定义了插件所需的 `BOT_ROOT`
 
 ## 插件命令一览
 
