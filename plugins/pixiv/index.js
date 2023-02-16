@@ -112,6 +112,12 @@ plugin.onMounted(() => {
         //--  return event.reply('精确给点+tag，如【精确给点原神】')
         //--}
         //--data = await parseMoedogSearch(tag)
+
+      //
+      // match : 给点
+      } else if (!tag) {
+        data = await parseLolicon(tag)
+
       } else {
         switch (tag) {
           //
@@ -126,9 +132,12 @@ plugin.onMounted(() => {
             data = await parseRss('monthly')
             break
           //
-          // match : 给点 / 给点原神
+          // match : 给点原神
           default:
-            data = await parseLolicon(tag)
+            data = await parseAnosuSearch(tag)
+            if (!data) {
+              data = await parseLolicon(tag)
+            }
         }
       }
 
@@ -158,28 +167,27 @@ plugin.onMounted(() => {
  * reference : https://rakuen.thec.me/PixivRss/
  */
 async function parseRss(type) { // {{{
-  const url = 'https://rakuen.thec.me/PixivRss/' + type + '-30'
+  const url = 'https://rakuen.thec.me/PixivRss/' + type + '-20'
 
   const response = await http.get(url, {timeout: 10000})
 
-  if (response.status === 200) {
-    const xml = response.data
+  if (response.status !== 200) {
+    return undefined
+  }
+  const xml = response.data
 
-    const parser = new XMLParser()
-    const feed = parser.parse(xml)
-    const items = feed.rss.channel.item
+  const parser = new XMLParser()
+  const feed = parser.parse(xml)
+  const items = feed.rss.channel.item
 
-    if (items.length === 0) {
-      return undefined
-    }
-    const chosen = choice(items)
-    //--console.log(chosen)
-
-    return {
-      title: chosen.title,
-      pid: chosen.guid,
-      imgUrls: pid2urls(chosen.guid)
-    }
+  if (items.length === 0) {
+    return undefined
+  }
+  const chosen = choice(items)
+  return {
+    title: chosen.title,
+    pid: chosen.guid,
+    imgUrls: pid2urls(chosen.guid)
   }
 } // }}}
 
@@ -191,26 +199,21 @@ async function parseRss(type) { // {{{
 async function parseLolicon(tag) { // {{{
   const url = 'https://api.lolicon.app/setu/v2'
 
-  let params = {}
-  if (tag)
-    params = {tag: tag}
+  const params = (tag) ? {tag: tag} : {}
   const response = await http.get(url, {params: params}, {timeout: 10000})
 
-  if (response.status === 200) {
-    const json = response.data
-    const items = json.data
-
-    if (items.length === 0) {
-      return undefined
-    }
-    const chosen = choice(items)
-    //--console.log(chosen)
-
-    return {
-      title: chosen.title,
-      pid: chosen.pid,
-      imgUrls: pid2urls(chosen.pid, chosen.ext)
-    }
+  if (response.status !== 200) {
+    return undefined
+  }
+  const items = response.data.data
+  if (items.length === 0) {
+    return undefined
+  }
+  const chosen = choice(items)
+  return {
+    title: chosen.title,
+    pid: chosen.pid,
+    imgUrls: [chosen.urls.original].concat( pid2urls(chosen.pid, chosen.ext) )
   }
 } // }}}
 
@@ -222,42 +225,67 @@ async function parseLolicon(tag) { // {{{
 async function parseMoedogSearch(tag) { // {{{
   const url = 'https://api.moedog.org/pixiv/v2'
 
-  let params = {}
-  if (tag)
-    params = {type: 'search', word: tag}
+  const params = {
+    type: 'search',
+    word: tag
+  }
   const response = await http.get(url, {params: params}, {timeout: 10000})
 
-  if (response.status === 200) {
-    const json = response.data
-    const preItems = json.illusts
-    let items = []
-    for (const i of preItems) {
-      //
-      // we only need safe-for-work illustrations
-      if (i.type === 'illust') {
-        let isR18 = false
-        for (const tag of i.tags) {
-          if (tag.name === 'R-18') {
-            isR18 = true
-            break
-          }
+  if (response.status !== 200) {
+    return undefined
+  }
+  const json = response.data
+  const preItems = json.illusts
+  let items = []
+  for (const i of preItems) {
+    //
+    // we only need safe-for-work illustrations
+    if (i.type === 'illust') {
+      let isR18 = false
+      for (const tag of i.tags) {
+        if (tag.name === 'R-18') {
+          isR18 = true
+          break
         }
-        if (!isR18)
-          items.push(i)
       }
+      if (!isR18)
+        items.push(i)
     }
+  }
 
-    if (items.length === 0) {
-      return undefined
-    }
-    const chosen = choice(items)
-    //--console.log(chosen)
+  if (items.length === 0) {
+    return undefined
+  }
+  const chosen = choice(items)
+  return {
+    title: chosen.title,
+    pid: chosen.id,
+    imgUrls: pid2urls(chosen.id)
+  }
+} // }}}
 
-    return {
-      title: chosen.title,
-      pid: chosen.id,
-      imgUrls: pid2urls(chosen.id)
-    }
+/**
+ * Parse AnosuPixivAPI response to data
+ *   tag : keyword in search
+ * reference : https://docs.anosu.top/
+ */
+async function parseAnosuSearch(tag) { // {{{
+  const url = 'https://image.anosu.top/pixiv/json'
+
+  const params = {keyword: tag}
+  const response = await http.get(url, {params: params}, {timeout: 10000})
+
+  if (response.status !== 200) {
+    return undefined
+  }
+  const item = response.data?.at(0)
+  if (item.length === 0) {
+    return undefined
+  }
+  return {
+    title: item.title,
+    pid: item.pid,
+    imgUrls: [item.url].concat( pid2urls(item.pid, item.ext) )
   }
 } // }}}
 
@@ -270,6 +298,7 @@ function pid2urls(pid, ext) { // {{{
   return [
     'https://pixiv.re/' + pid + '.' + ext,
     'https://pixiv.nl/' + pid + '.' + ext,
+    'https://i.pixiv.nl/' + pid + '.' + ext,
     'https://pixiv.shojo.cn/' + pid
   ]
 } // }}}
