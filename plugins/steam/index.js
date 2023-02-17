@@ -98,25 +98,21 @@ plugin.onMounted(() => {
  * Convert Steam BBCode and basic HTML to plain text and images
  */
 function toMessage(content) { // {{{
-  content = content.replaceAll(/(.)\n(.)/g, '$1$2')
   content = content
     //
     // bare and old steam image url ==> {STEAM_CLAN_IMAGE} link
     .replaceAll(/https?:\/\/.*?public\/images\/clans(.*?\.(?:jpg|png|gif))/g, '[img]{STEAM_CLAN_IMAGE}$1[/img]')
     //
     // Steam BBCode
-    .replaceAll(/\[h1\](.*?)\[\/h1\]/g, '====== $1 ======\n')
-    .replaceAll(/\[h2\](.*?)\[\/h2\]/g, '::::: $1 :::::\n')
-    .replaceAll(/\[h3\](.*?)\[\/h3\]/g, '---- $1 ----\n')
-    .replaceAll(/\[b\](.*?)\[\/b\]/g, '*$1*')
-    .replaceAll(/\[i\](.*?)\[\/i\]/g, '*$1*')
-    .replaceAll('[list]', '')
-    .replaceAll('[olist]', '')
+    .replaceAll(/\[h1\]([\s\S]*?)\[\/h1\]/g, '====== $1 ======\n')
+    .replaceAll(/\[h2\]([\s\S]*?)\[\/h2\]/g, '::::: $1 :::::\n')
+    .replaceAll(/\[h3\]([\s\S]*?)\[\/h3\]/g, '---- $1 ----\n')
+    .replaceAll(/\[b\]([\s\S]*?)\[\/b\]/g, '*$1*')
+    .replaceAll(/\[i\]([\s\S]*?)\[\/i\]/g, '*$1*')
+    .replaceAll(/\[o?list\]/g, '')
     .replaceAll('[*]', '\n   * ')
-    .replaceAll('[/list]', '\n')
-    .replaceAll('[/olist]', '\n')
+    .replaceAll(/\[\/o?list\]/g, '\n')
     .replaceAll(/\[previewyoutube=(\w+).*?previewyoutube\]/g, 'https://youtu.be/$1\n')
-    .replaceAll('’', '\'')
     .replaceAll(/\[url=(https?:\/\/\S+?)](.*?)\[\/url\]/g, '$2 ($1) ')
     //
     // basic HTML
