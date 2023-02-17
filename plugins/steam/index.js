@@ -74,8 +74,12 @@ plugin.onMounted(() => {
     )
 
     const news = response?.data?.appnews?.newsitems?.at(-1)
+    const count = response?.data?.appnews?.count
     if (!news) {
       return event.reply(`(>_<) 找不到游戏 (${appid}) 的新闻哦，试着用【游戏查询】命令来查找其他游戏id吧！`)
+    }
+    if (count < num) {
+      event.reply(`一共只有 ${count} 条新闻哦，将给出最旧一则新闻`)
     }
     event.reply([
       '游戏名：' + await spawnSync('grep', [`^${appid}`, APPID_DATA_FILE]).output[1].toString('utf8').trim() + '\n',
@@ -88,11 +92,16 @@ plugin.onMounted(() => {
 }) // }}}
 
 /**
- * Convert Steam BBCode to plain text and images
+ * Convert Steam BBCode and basic HTML to plain text and images
  */
 function toMessage(content) { // {{{
   content = content.replaceAll(/(.)\n(.)/g, '$1$2')
   content = content
+    //
+    // bare and old steam image url ==> {STEAM_CLAN_IMAGE} link
+    .replaceAll(/https?:\/\/.*?public\/images\/clans(.*?\.(?:jpg|png|gif))/g, '[img]{STEAM_CLAN_IMAGE}$1[/img]')
+    //
+    // Steam BBCode
     .replaceAll(/\[h1\](.*?)\[\/h1\]/g, '====== $1 ======\n')
     .replaceAll(/\[h2\](.*?)\[\/h2\]/g, '::::: $1 :::::\n')
     .replaceAll(/\[h3\](.*?)\[\/h3\]/g, '---- $1 ----\n')
@@ -103,14 +112,24 @@ function toMessage(content) { // {{{
     .replaceAll('[*]', '\n   * ')
     .replaceAll('[/list]', '\n')
     .replaceAll('[/olist]', '\n')
-    .replaceAll(/\[previewyoutube=(\w+).*?previewyoutube\]/g, 'youtu.be/$1\n')
+    .replaceAll(/\[previewyoutube=(\w+).*?previewyoutube\]/g, 'https://youtu.be/$1\n')
     .replaceAll('’', '\'')
-    .replaceAll(/\[url=(https?:\/\/\S+?)](.*?)\[\/url\]/g, '$2 ($1)')
+    .replaceAll(/\[url=(https?:\/\/\S+?)](.*?)\[\/url\]/g, '$2 ($1) ')
+    //
+    // basic HTML
+    .replaceAll(/<br.*?\/?>/g, '\n')
+    .replaceAll(/<\/?p>/g, '\n')
+    .replaceAll('&apos;', '\'')
+    .replaceAll(/<a.*?href=['"](.*?)["'].*?>(.*?)<\/a>/g, '$2 ($1) ')
+    .replaceAll(/<img.*?src=['"](.*?)["'].*?\/?>/g, '{IMG_START}###$1{IMG_END}')
 
-  let msg = content.split(/\[img\]|\[\/img\]/)
+  let msg = content.split(/\[\/?img\]|{IMG_(?:START|END)}/)
   msg.forEach((str, index, msg) => {
     if (str.startsWith('{STEAM_CLAN_IMAGE}')) {
       const url = str.replace('{STEAM_CLAN_IMAGE}', IMG_URL_BASE)
+      msg[index] = segment.image(url)
+    } else if (str.startsWith('###')) {
+      const url = str.replace('###', '')
       msg[index] = segment.image(url)
     }
   })
