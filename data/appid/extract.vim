@@ -4,5 +4,6 @@ g/   $/d
 %s/\v\&(amp;)?amp;/\&/g
 %s/\\"/\"/g
 g/\<demo\>\s*/d
+%s/\s\+$//
 w appid_name_extracted.txt
 q!
