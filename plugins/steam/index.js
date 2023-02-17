@@ -8,6 +8,7 @@ const QUERY_URL = 'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002'
 const IMG_URL_BASE = 'https://cdn.akamai.steamstatic.com/steamcommunity/public/images/clans'
 
 const APPID_DATA_FILE = BOT_ROOT + '/data/appid/appid_name.txt'
+const MAX_LINES = 30
 
 plugin.onMounted(() => {
   const cmdSearch = /^\s*游戏(搜索|查询)(.*)/
@@ -34,11 +35,12 @@ plugin.onMounted(() => {
     if (result === '') {
       return event.reply('(>_<) 找不到结果哦，试着用更准确的描述吧！')
     }
-    const lines = result.split('\n').length - 1
+    const lines = result.split('\n')
+    const numLines = lines.length - 1
     //
     // found too many results
-    if (lines > 70) {
-      return event.reply(`(>_<) 结果太多啦（共 ${lines} 行），试着用更准确的描述吧！`)
+    if (numLines > MAX_LINES) {
+      return event.reply(`结果太多啦（共 ${numLines} 行），前 ${MAX_LINES} 个结果为：\n${lines.slice(0, MAX_LINES).join('\n')}`)
     }
     event.reply(result)
   }) // }}}
