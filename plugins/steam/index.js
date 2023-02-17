@@ -15,15 +15,18 @@ plugin.onMounted(() => {
 
   plugin.onMatch(cmdSearch, async event => { // {{{
     const raw = event.raw_message
-    const name = raw.match(cmdSearch)[2]?.trim()
+    let name = raw.match(cmdSearch)[2]?.trim()
 
     if (!name || name === '') {
-      return event.reply('游戏查询<全部或部分游戏名>，如【游戏查询muse dash】')
+      return event.reply('游戏查询<全部或部分*英文原名*>，如【游戏查询muse dash】，支持 PCRE 正则')
     }
+    //
+    // if use '^' then skip leading appid
+    name = name.replace(/^\^/, '^\\d+   ')
 
     //
     // find game name in the data file, in a safe way
-    const child = await spawnSync('grep', [name, APPID_DATA_FILE, '-i'])
+    const child = await spawnSync('grep', ['-Pi', name, APPID_DATA_FILE])
     const result = child.output[1].toString('utf8')
 
     //
