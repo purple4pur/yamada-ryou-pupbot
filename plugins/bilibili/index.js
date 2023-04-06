@@ -21,6 +21,7 @@ plugin.onMounted(() => {
     }
 
     let vid = match
+    let success = true
     //
     // match b23.tv/1A2b3C4d
     if (match.startsWith('b23')) {
@@ -33,6 +34,12 @@ plugin.onMounted(() => {
         //
         // short url ==> real vid
         let res = await http.get('https://' + match)
+          .catch(err => {
+            console.log(err.message)
+            event.reply(`(>_<) 大概超时了！`)
+            success = false
+          })
+        if (!success) return
         if (res?.status !== 200) {
           return
         }
@@ -43,18 +50,24 @@ plugin.onMounted(() => {
       }
     }
 
-    const isAvid = ( vid.startsWith('A') || vid.startsWith('a') ) ? true : false
+    const isAvid = vid.startsWith('A') || vid.startsWith('a')
+    if (isAvid && !/^\d+$/.test(vid.slice(2))) {
+      console.log(`Querying invalid avid : ${vid}`)
+      return
+    }
 
     //
     // get bilibili video infomation
     // reference : https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/video/info.md#获取视频详细信息web端
-    let params = {}
-    if (isAvid) {
-      params = {aid: vid.slice(2)}
-    } else {
-      params = {bvid: vid}
-    }
+    const params = (isAvid) ? {aid: vid.slice(2)} : {bvid: vid}
+    success = true
     const response = await http.get(QUERY_URL, {params: params})
+      .catch(err => {
+        console.log(err.message)
+        event.reply(`(>_<) 大概超时了！`)
+        success = false
+      })
+    if (!success) return
 
     if (response.status !== 200) {
       return
