@@ -111,34 +111,34 @@ plugin.onMounted(() => {
         //--if (!tag) {
         //--  return event.reply('精确给点+tag，如【精确给点原神】')
         //--}
-        //--data = await parseMoedogSearch(tag)
+        //--data = await parseMoedogSearch(event, tag)
 
       //
       // match : 给点
       } else if (!tag) {
-        data = await parseLolicon(tag)
+        data = await parseLolicon(event, tag)
 
       } else {
         switch (tag) {
           //
           // match : 给点月榜
           case '日榜':
-            data = await parseRss('daily')
+            data = await parseRss(event, 'daily')
             break
           case '周榜':
-            data = await parseRss('weekly')
+            data = await parseRss(event, 'weekly')
             break
           case '月榜':
-            data = await parseRss('monthly')
+            data = await parseRss(event, 'monthly')
             break
           //
           // match : 给点原神
           default:
             console.log('trying anosu api ...')
-            data = await parseAnosuSearch(tag)
+            data = await parseAnosuSearch(event, tag)
             if (!data) {
               console.log('trying lolicon api ...')
-              data = await parseLolicon(tag)
+              data = await parseLolicon(event, tag)
             }
         }
       }
@@ -168,13 +168,20 @@ plugin.onMounted(() => {
  *   type : 'daily' / 'weekly' / 'monthly'
  * reference : https://rakuen.thec.me/PixivRss/
  */
-async function parseRss(type) { // {{{
+async function parseRss(event, type) { // {{{
   const url = 'https://rakuen.thec.me/PixivRss/' + type + '-20'
 
+  let success = true
   const response = await http.get(url, {timeout: 10000})
+    .catch(err => {
+      console.log(err.message)
+      event.reply(`(>_<) 大概超时了！`)
+      success = false
+    })
+  if (!success) return null
 
   if (response.status !== 200) {
-    return undefined
+    return null
   }
   const xml = response.data
 
@@ -183,7 +190,7 @@ async function parseRss(type) { // {{{
   const items = feed.rss.channel.item
 
   if (items.length === 0) {
-    return undefined
+    return null
   }
   const chosen = choice(items)
   return {
@@ -198,18 +205,25 @@ async function parseRss(type) { // {{{
  *   tag : if not present, query a random image
  * reference : https://api.lolicon.app/#/setu
  */
-async function parseLolicon(tag) { // {{{
+async function parseLolicon(event, tag) { // {{{
   const url = 'https://api.lolicon.app/setu/v2'
 
   const params = (tag) ? {tag: tag} : {}
-  const response = await http.get(url, {params: params}, {timeout: 10000})
+  let success = true
+  const response = await http.get(url, {params: params, timeout: 10000})
+    .catch(err => {
+      console.log(err.message)
+      event.reply(`(>_<) 大概超时了！`)
+      success = false
+    })
+  if (!success) return null
 
   if (response.status !== 200) {
-    return undefined
+    return null
   }
   const items = response.data.data
   if (items.length === 0) {
-    return undefined
+    return null
   }
   const chosen = choice(items)
   return {
@@ -224,17 +238,24 @@ async function parseLolicon(tag) { // {{{
  *   tag : keyword in search
  * reference : https://api.moedog.org/pixiv/v2.html
  */
-async function parseMoedogSearch(tag) { // {{{
+async function parseMoedogSearch(event, tag) { // {{{
   const url = 'https://api.moedog.org/pixiv/v2'
 
   const params = {
     type: 'search',
     word: tag
   }
-  const response = await http.get(url, {params: params}, {timeout: 10000})
+  let success = true
+  const response = await http.get(url, {params: params, timeout: 10000})
+    .catch(err => {
+      console.log(err.message)
+      event.reply(`(>_<) 大概超时了！`)
+      success = false
+    })
+  if (!success) return null
 
   if (response.status !== 200) {
-    return undefined
+    return null
   }
   const json = response.data
   const preItems = json.illusts
@@ -256,7 +277,7 @@ async function parseMoedogSearch(tag) { // {{{
   }
 
   if (items.length === 0) {
-    return undefined
+    return null
   }
   const chosen = choice(items)
   return {
@@ -271,18 +292,25 @@ async function parseMoedogSearch(tag) { // {{{
  *   tag : keyword in search
  * reference : https://docs.anosu.top/
  */
-async function parseAnosuSearch(tag) { // {{{
+async function parseAnosuSearch(event, tag) { // {{{
   const url = 'https://image.anosu.top/pixiv/json'
 
   const params = {keyword: tag}
-  const response = await http.get(url, {params: params}, {timeout: 10000})
+  let success = true
+  const response = await http.get(url, {params: params, timeout: 10000})
+    .catch(err => {
+      console.log(err.message)
+      event.reply(`(>_<) 大概超时了！`)
+      success = false
+    })
+  if (!success) return null
 
   if (response.status !== 200) {
-    return undefined
+    return null
   }
   const item = response.data?.at(0)
   if (!item) {
-    return undefined
+    return null
   }
   return {
     title: item.title,

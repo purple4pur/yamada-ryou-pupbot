@@ -9,7 +9,7 @@
 !/plugins/**.js
 /plugins/debug
 
-!/data/img-cache/.keep
+!/data/img-cache/105151086.img
 
 !/data/appid/extract.vim
 !/data/appid/Makefile
